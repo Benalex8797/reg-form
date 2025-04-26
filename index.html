@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Student Register Project</title>
+    <style>
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #f0f4f8;
+        margin: 0;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+      }
+
+      form {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 30px;
+        justify-content: center;
+      }
+
+      input,
+      select,
+      button {
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 16px;
+      }
+
+      button {
+        cursor: pointer;
+        background-color: #4caf50;
+        color: white;
+        border: none;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+
+      #clearDataBtn {
+        background-color: #f44336;
+      }
+
+      #clearDataBtn:hover {
+        background-color: #d73833;
+      }
+
+      .section {
+        margin-top: 30px;
+      }
+
+      .section h2 {
+        border-bottom: 2px solid #333;
+        margin-bottom: 10px;
+        padding-bottom: 5px;
+      }
+
+      ul {
+        list-style: none;
+        padding: 0;
+      }
+
+      li {
+        background: white;
+        padding: 10px;
+        margin-bottom: 6px;
+        border-radius: 8px;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+      }
+
+      .search-box {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .search-box input {
+        width: 50%;
+        padding: 10px;
+      }
+
+      footer {
+        text-align: center;
+        margin-top: 40px;
+        font-size: 14px;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Student Register</h1>
+
+    <form id="studentForm">
+      <input type="text" id="name" placeholder="Student Name" required />
+      <label for="class">Class:</label>
+      <select id="class">
+        <option value="JSS1">JSS1</option>
+        <option value="JSS2">JSS2</option>
+        <option value="JSS3">JSS3</option>
+      </select>
+      <input
+        type="number"
+        id="score"
+        placeholder="Score (0 - 100)"
+        min="0"
+        max="100"
+        required
+      />
+      <button type="submit">Add Student</button>
+      <button type="button" id="clearDataBtn">Clear All Data</button>
+    </form>
+
+    <div class="search-box">
+      <input
+        type="text"
+        id="searchInput"
+        placeholder="Search by name or class..."
+      />
+    </div>
+
+    <div class="section" id="classSection"></div>
+    <div class="section" id="gradeSection"></div>
+
+    <footer>
+      Project by Professor Alex
+      |
+      <a
+        href=https://github.com/Benalex8797/reg-form.git
+        target="_blank"
+        rel="noopener"
+        >GitHub Repository</a
+      >
+    </footer>
+
+    <script>
+      let students = JSON.parse(localStorage.getItem("students")) || [];
+
+      function saveToLocalStorage() {
+        localStorage.setItem("students", JSON.stringify(students));
+      }
+
+      function getGrade(score) {
+        if (score >= 70) return "A";
+        if (score >= 60) return "B";
+        if (score >= 50) return "C";
+        if (score >= 40) return "D";
+        return "F";
+      }
+
+      function displayStudents(filter = "") {
+        const classMap = {};
+        const gradeMap = { A: [], B: [], C: [], D: [], F: [] };
+
+        students.forEach((s) => {
+          if (
+            !s.name.toLowerCase().includes(filter.toLowerCase()) &&
+            !s.class.toLowerCase().includes(filter.toLowerCase())
+          )
+            return;
+          if (!classMap[s.class]) classMap[s.class] = [];
+          classMap[s.class].push(s);
+          const grade = getGrade(s.score);
+          gradeMap[grade].push(s);
+        });
+
+        const classSection = document.getElementById("classSection");
+        classSection.innerHTML = "";
+        for (const cls in classMap) {
+          const div = document.createElement("div");
+          div.innerHTML = `<h2>${cls}</h2><ul>${classMap[cls]
+            .map((s) => `<li>${s.name} - Score: ${s.score}</li>`)
+            .join("")}</ul>`;
+          classSection.appendChild(div);
+        }
+
+        const gradeSection = document.getElementById("gradeSection");
+        gradeSection.innerHTML = "";
+        for (const g in gradeMap) {
+          if (gradeMap[g].length > 0) {
+            const div = document.createElement("div");
+            div.innerHTML = `<h2>Grade ${g}</h2><ul>${gradeMap[g]
+              .map((s) => `<li>${s.name} (${s.class}) - ${s.score}</li>`)
+              .join("")}</ul>`;
+            gradeSection.appendChild(div);
+          }
+        }
+      }
+
+      document
+        .getElementById("studentForm")
+        .addEventListener("submit", function (e) {
+          e.preventDefault();
+          const name = document.getElementById("name").value.trim();
+          const studentClass = document.getElementById("class").value;
+          const score = parseInt(document.getElementById("score").value);
+          if (name && score >= 0 && score <= 100) {
+            students.push({ name, class: studentClass, score });
+            saveToLocalStorage();
+            displayStudents();
+            this.reset();
+          }
+        });
+
+      document
+        .getElementById("searchInput")
+        .addEventListener("input", function () {
+          displayStudents(this.value);
+        });
+
+      document.getElementById("clearDataBtn").addEventListener("click", () => {
+        localStorage.removeItem("students");
+        students = [];
+        displayStudents();
+      });
+
+      // Initial render
+      displayStudents();
+    </script>
+  </body>
+</html>
